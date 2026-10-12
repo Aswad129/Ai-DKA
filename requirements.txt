@@ -1,0 +1,9 @@
+pandas
+scikit-learn
+Sastrawi
+matplotlib
+seaborn
+wordcloud
+joblib
+streamlit
+google-api-python-client
