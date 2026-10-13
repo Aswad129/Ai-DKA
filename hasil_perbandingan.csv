@@ -1,0 +1,5 @@
+model,accuracy,macro_F1,macro_F1_CV5
+LinearSVC (balanced),0.7647,0.6537,0.6573
+LinearSVC (tanpa bobot),0.7738,0.6866,0.6288
+Naive Bayes,0.7014,0.467,0.4892
+Logistic Regression,0.7873,0.6997,0.6666

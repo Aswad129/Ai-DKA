@@ -1,0 +1,108 @@
+ALGORITHM Klasifikasi_Sentimen_MBG
+INPUT   : daftar_video, api_key
+OUTPUT  : model sentimen (model_sentimen_mbg.joblib), label dan skor komentar baru
+
+START
+  komentar <- []
+  FOR each video_id IN daftar_video DO
+    token  <- NULL
+    lanjut <- TRUE
+    WHILE lanjut = TRUE DO
+      halaman <- YouTubeAPI.commentThreads(video_id, maxResults = 100, pageToken = token)
+      FOR each item IN halaman.items DO
+        komentar.add(item.teks, item.tanggal, item.like)
+      END FOR
+      token <- halaman.nextPageToken
+      IF token = NULL THEN
+        lanjut <- FALSE
+      END IF
+    END WHILE
+  END FOR
+
+  komentar <- hapus_duplikat(komentar)
+  komentar <- hapus_kosong(komentar)
+  simpan_csv(komentar)
+
+
+  data <- []
+  FOR each c IN komentar DO
+    c <- lowercase(c)                                 
+    c <- hapus(c, tautan, mention, hashtag, angka, tanda_baca, emoji)   
+    c <- normalisasi_singkatan(c)
+    T <- pecah_per_spasi(c)                           
+    hasil <- []
+    FOR each t IN T DO
+      IF t IN STOPWORD AND t NOT IN NEGASI THEN
+        lewati t                                     
+      ELSE IF t IN NEGASI THEN
+        hasil.add(t)                                   
+      ELSE
+        hasil.add(stemming_sastrawi(t))               
+      END IF
+    END FOR
+    c <- gabung(hasil, " ")
+    IF c tidak kosong THEN
+      data.add(c)
+    END IF
+  END FOR
+
+  FOR each c IN data DO
+    token <- pecah_per_spasi(c)
+    skor  <- 0
+    FOR i <- 0 TO panjang(token) - 1 DO
+      IF token[i] IN LEXICON THEN
+        bobot <- LEXICON[token[i]]
+        IF i > 0 AND token[i-1] IN NEGASI THEN
+          bobot <- -bobot                              
+        END IF
+        skor <- skor + bobot
+      END IF
+    END FOR
+    IF skor > 0 THEN
+      label[c] <- "positif"
+    ELSE IF skor < 0 THEN
+      label[c] <- "negatif"
+    ELSE
+      label[c] <- "netral"
+    END IF
+  END FOR
+
+  sesuai <- FALSE
+  WHILE sesuai = FALSE DO
+    sampel <- ambil_acak(data, 200)
+    tampilkan sampel untuk dinilai manual
+    IF label sampel sesuai THEN
+      sesuai <- TRUE
+    ELSE
+      koreksi label sampel (label manual menimpa label lexicon)
+    END IF
+  END WHILE
+
+  (X_latih, X_uji, y_latih, y_uji) <- split(data, label, uji = 0.2, stratified, seed = 42)
+
+  memuaskan <- FALSE
+  WHILE memuaskan = FALSE DO
+    V <- TFIDF(max_features = 5000, ngram = (1,2), min_df = 2, max_df = 0.95)
+    V.fit(X_latih)                                     
+    M <- LinearSVC(class_weight = "balanced", C = C)
+    M.fit(V.transform(X_latih), y_latih)
+    y_pred <- M.predict(V.transform(X_uji))
+    hitung accuracy, precision, recall, F1 per kelas, macro_F1, confusion_matrix
+    IF macro_F1 memuaskan THEN
+      memuaskan <- TRUE
+    ELSE
+      ubah C atau ubah fitur TF-IDF
+    END IF
+  END WHILE
+
+  simpan(V, M)
+  WHILE aplikasi berjalan DO
+    teks <- input pengguna
+    IF tombol "Prediksi" ditekan AND teks tidak kosong THEN
+      bersih <- praproses(teks)
+      label  <- M.predict(V.transform(bersih))
+      skor   <- M.decision_function(V.transform(bersih))    
+      tampilkan(label, skor)
+    END IF
+  END WHILE
+END

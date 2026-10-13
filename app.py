@@ -3,7 +3,7 @@ import joblib
 import streamlit as st
 from praproses import praproses
 
-st.set_page_config(page_title="Sentimen MBG", page_icon="🍱")
+st.set_page_config(page_title="Sentimen MBG", page_icon="")
 st.title("Klasifikasi Sentimen Komentar MBG")
 st.caption("TF-IDF + Support Vector Machine (LinearSVC)")
 

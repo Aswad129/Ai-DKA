@@ -34,8 +34,7 @@ print(f"Data latih: {len(X_lat)} | Data uji: {len(X_uji)}")
 
 
 def buat(clf):
-    return Pipeline([("tfidf", TfidfVectorizer(max_features=5000, ngram_range=(1, 2),
-                                               min_df=2, max_df=0.95)), ("clf", clf)])
+    return Pipeline([("tfidf", TfidfVectorizer(max_features=5000, ngram_range=(1, 2),min_df=2, max_df=0.95)), ("clf", clf)])
 
 
 kandidat = {
